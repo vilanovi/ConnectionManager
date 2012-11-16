@@ -12,10 +12,8 @@
  *
  */
 extern NSString * const AMAsynchronousConnectionStatusDownloadProgressKey;
-
 extern NSString * const AMAsynchronousConnectionStatusUploadProgressKey;
 extern NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey;
-extern NSString * const AMAsynchronousConnectionStatusMessageKey;
 
 
 // --- OperationQueue-Based Connections -- //

@@ -11,4 +11,3 @@
 NSString * const AMAsynchronousConnectionStatusDownloadProgressKey = @"AMAsynchronousConnectionStatusDownloadProgressKey";
 NSString * const AMAsynchronousConnectionStatusUploadProgressKey = @"AMAsynchronousConnectionStatusUploadProgressKey";
 NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsynchronousConnectionStatusReceivedURLHeadersKey";
-NSString * const AMAsynchronousConnectionStatusMessageKey = @"AMAsynchronousConnectionStatusMessageKey";
