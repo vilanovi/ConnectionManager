@@ -3,7 +3,7 @@ ConnectionManager
 
 ####Easy management for connections
 
-Here I present a very simple framework to handle connections in a very effitien and easy way. Just give a **NSURLRequest** and you will have in return the result of a **NSURLConnection**. 
+Here I present a very simple framework to handle connections in a very efficient and easy way. Just give a **NSURLRequest** and you will have in return the result of a **NSURLConnection**. 
 
 The connections are performed asynchronously and the framework allows you to:
 
@@ -79,4 +79,4 @@ The reason why there are two types of different connections (queue-based and bas
 
 The future work is to create a concurrent **NSOperation** and block manually the thread (using **NSConditon**) while the **NSURLConnection** is performing the connection asynchronously.
 
-I hope to push these new changes as soon I can.
+I hope to push these new changes as soon as I can.
