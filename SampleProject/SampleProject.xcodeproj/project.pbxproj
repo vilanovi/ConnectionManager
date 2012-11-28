@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D215F2641664A3610013B2C0 /* AMAsyncConnectionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D215F2631664A3610013B2C0 /* AMAsyncConnectionOperation.m */; };
 		D2A1B4F81654AE810099C7B7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2A1B4F71654AE810099C7B7 /* UIKit.framework */; };
 		D2A1B4FA1654AE810099C7B7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2A1B4F91654AE810099C7B7 /* Foundation.framework */; };
 		D2A1B4FC1654AE810099C7B7 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2A1B4FB1654AE810099C7B7 /* CoreGraphics.framework */; };
@@ -19,13 +20,12 @@
 		D2A1B5111654AE820099C7B7 /* AMViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B5101654AE820099C7B7 /* AMViewController.m */; };
 		D2A1B5141654AE820099C7B7 /* AMViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2A1B5121654AE820099C7B7 /* AMViewController.xib */; };
 		D2A1B5311654C3350099C7B7 /* AMConcurrentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B5221654C3350099C7B7 /* AMConcurrentOperation.m */; };
-		D2A1B5321654C3350099C7B7 /* AMAsynchronousConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B5241654C3350099C7B7 /* AMAsynchronousConnection.m */; };
 		D2A1B5331654C3350099C7B7 /* AMConnectionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B5261654C3350099C7B7 /* AMConnectionManager.m */; };
-		D2A1B5341654C3350099C7B7 /* AMConnectionManagerTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B5281654C3350099C7B7 /* AMConnectionManagerTypes.m */; };
-		D2A1B5351654C3350099C7B7 /* AMConnectionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A1B52A1654C3350099C7B7 /* AMConnectionOperation.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D215F2621664A3610013B2C0 /* AMAsyncConnectionOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMAsyncConnectionOperation.h; sourceTree = "<group>"; };
+		D215F2631664A3610013B2C0 /* AMAsyncConnectionOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMAsyncConnectionOperation.m; sourceTree = "<group>"; };
 		D2A1B4F31654AE810099C7B7 /* SampleProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SampleProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2A1B4F71654AE810099C7B7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D2A1B4F91654AE810099C7B7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -43,15 +43,13 @@
 		D2A1B5101654AE820099C7B7 /* AMViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AMViewController.m; sourceTree = "<group>"; };
 		D2A1B5131654AE820099C7B7 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AMViewController.xib; sourceTree = "<group>"; };
 		D2A1B5221654C3350099C7B7 /* AMConcurrentOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMConcurrentOperation.m; sourceTree = "<group>"; };
-		D2A1B5231654C3350099C7B7 /* AMAsynchronousConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMAsynchronousConnection.h; sourceTree = "<group>"; };
-		D2A1B5241654C3350099C7B7 /* AMAsynchronousConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMAsynchronousConnection.m; sourceTree = "<group>"; };
 		D2A1B5251654C3350099C7B7 /* AMConnectionManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMConnectionManager.h; sourceTree = "<group>"; };
 		D2A1B5261654C3350099C7B7 /* AMConnectionManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMConnectionManager.m; sourceTree = "<group>"; };
-		D2A1B5271654C3350099C7B7 /* AMConnectionManagerTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMConnectionManagerTypes.h; sourceTree = "<group>"; };
-		D2A1B5281654C3350099C7B7 /* AMConnectionManagerTypes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMConnectionManagerTypes.m; sourceTree = "<group>"; };
-		D2A1B5291654C3350099C7B7 /* AMConnectionOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMConnectionOperation.h; sourceTree = "<group>"; };
-		D2A1B52A1654C3350099C7B7 /* AMConnectionOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMConnectionOperation.m; sourceTree = "<group>"; };
 		D2A1B5391654C6760099C7B7 /* AMConcurrentOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AMConcurrentOperation.h; sourceTree = "<group>"; };
+		D2B6715A1665B10400B5F767 /* AMAsynchronousConnection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AMAsynchronousConnection.h; path = Deprecated/AMAsynchronousConnection.h; sourceTree = "<group>"; };
+		D2B6715B1665B10400B5F767 /* AMAsynchronousConnection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AMAsynchronousConnection.m; path = Deprecated/AMAsynchronousConnection.m; sourceTree = "<group>"; };
+		D2B6715C1665B10400B5F767 /* AMConnectionOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AMConnectionOperation.h; path = Deprecated/AMConnectionOperation.h; sourceTree = "<group>"; };
+		D2B6715D1665B10400B5F767 /* AMConnectionOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AMConnectionOperation.m; path = Deprecated/AMConnectionOperation.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,19 +124,27 @@
 		D2A1B5201654C3350099C7B7 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				D2B671581665B0E400B5F767 /* Deprecated */,
 				D2A1B5391654C6760099C7B7 /* AMConcurrentOperation.h */,
 				D2A1B5221654C3350099C7B7 /* AMConcurrentOperation.m */,
-				D2A1B5291654C3350099C7B7 /* AMConnectionOperation.h */,
-				D2A1B52A1654C3350099C7B7 /* AMConnectionOperation.m */,
-				D2A1B5231654C3350099C7B7 /* AMAsynchronousConnection.h */,
-				D2A1B5241654C3350099C7B7 /* AMAsynchronousConnection.m */,
-				D2A1B5271654C3350099C7B7 /* AMConnectionManagerTypes.h */,
-				D2A1B5281654C3350099C7B7 /* AMConnectionManagerTypes.m */,
+				D215F2621664A3610013B2C0 /* AMAsyncConnectionOperation.h */,
+				D215F2631664A3610013B2C0 /* AMAsyncConnectionOperation.m */,
 				D2A1B5251654C3350099C7B7 /* AMConnectionManager.h */,
 				D2A1B5261654C3350099C7B7 /* AMConnectionManager.m */,
 			);
 			name = Source;
 			path = ../../Source;
+			sourceTree = "<group>";
+		};
+		D2B671581665B0E400B5F767 /* Deprecated */ = {
+			isa = PBXGroup;
+			children = (
+				D2B6715A1665B10400B5F767 /* AMAsynchronousConnection.h */,
+				D2B6715B1665B10400B5F767 /* AMAsynchronousConnection.m */,
+				D2B6715C1665B10400B5F767 /* AMConnectionOperation.h */,
+				D2B6715D1665B10400B5F767 /* AMConnectionOperation.m */,
+			);
+			name = Deprecated;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -212,10 +218,8 @@
 				D2A1B5081654AE810099C7B7 /* AMAppDelegate.m in Sources */,
 				D2A1B5111654AE820099C7B7 /* AMViewController.m in Sources */,
 				D2A1B5311654C3350099C7B7 /* AMConcurrentOperation.m in Sources */,
-				D2A1B5321654C3350099C7B7 /* AMAsynchronousConnection.m in Sources */,
 				D2A1B5331654C3350099C7B7 /* AMConnectionManager.m in Sources */,
-				D2A1B5341654C3350099C7B7 /* AMConnectionManagerTypes.m in Sources */,
-				D2A1B5351654C3350099C7B7 /* AMConnectionOperation.m in Sources */,
+				D215F2641664A3610013B2C0 /* AMAsyncConnectionOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

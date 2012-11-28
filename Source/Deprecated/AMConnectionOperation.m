@@ -43,8 +43,11 @@
 
 - (void)operationDidFinish
 {
-    if (_completion)
-        _completion(_response,_data,_error);
+    if (!self.isCancelled)
+    {
+        if (_completion)
+            _completion(_response,_data,_error);
+    }
 }
 
 @end

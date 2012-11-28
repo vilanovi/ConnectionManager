@@ -77,7 +77,7 @@
     @catch(...)
     {
         // Do not rethrow exceptions.
-    }
+    }    
 }
 
 - (void)completeOperation

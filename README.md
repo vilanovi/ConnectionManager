@@ -17,7 +17,7 @@ Also, you can:
 * Get feedback of downloading/uploading status (progress)
 * Use/define credentials and trusted servers
 
-The framework uses **NSOperationQueue** to perform concurrent connections and manipulate queued calls. However, in order to get feedback from the connection (progress status) and use credentials and trusted servers, we use simple asynchronous connections (not queue-based). 
+The framework uses **NSOperationQueue** to perform concurrent connections and manipulate queued calls. 
 
 Also, all the completions blocks are called in the main thread.
 
@@ -73,10 +73,3 @@ From the `progressStatus` dictionary you can get:
 * Upload progress (float in [0,1]) using the key `AMAsynchronousConnectionStatusUploadProgressKey`
 * The headers of the response while availables using the key`AMAsynchronousConnectionStatusReceivedURLHeadersKey`
 
-##Future Work
-
-The reason why there are two types of different connections (queue-based and basic asynchronous) is because in queue-based we are using **synchronous** **NSURLConnetion**s in order to block the **NSOperation** asynchronous thread, and if we want to get feedback from the **NSURLConnection** and use credentials, we must use a asynchronous **NSURLConnection**.
-
-The future work is to create a concurrent **NSOperation** and block manually the thread (using **NSConditon**) while the **NSURLConnection** is performing the connection asynchronously.
-
-I hope to push these new changes as soon I can.

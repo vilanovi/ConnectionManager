@@ -43,6 +43,14 @@
     [super viewDidLoad];
 
     _progressBar.progress = 0.0f;
+    
+    AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
+    _stepper.stepValue = 1;
+    _stepper.value = connectionManager.maxConcurrentConnectionCount;
+    _stepper.minimumValue = 1;
+    _stepper.maximumValue = 1000000;
+    
+    [self _refreshViewsData];
 }
 
 - (void)didReceiveMemoryWarning
@@ -52,51 +60,46 @@
 
 #pragma mark IBActions
 
-- (IBAction)operationBasedAction:(id)sender
-{
-    // --- OPERATION BASED REQUEST --- //
-    NSURLRequest *urlRequest = [self _randomRequest];
-    
-    AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
-    
-    // Cancelling old request if not started
-    [connectionManager cancelRequestWithKey:_oldConnectionKey];
-    
-    // Starting the request
-    _oldConnectionKey = [connectionManager performRequest:urlRequest completionBlock:^(NSURLResponse *response, NSData *data, NSError *error, NSInteger key) {
-        
-        if (key == _oldConnectionKey)
-        {
-            // This is the last request
-            if (!error)
-                [self _setImageFromData:data];
-        }
-        else
-        {
-            // Previous requests are ignored
-        }
-    }];
-    
-    // Changing the priority of the request
-    [connectionManager changeToPriority:AMConnectionPriorityVeryHigh requestWithKey:_oldConnectionKey];
-}
-
 - (IBAction)asynchornousAction:(id)sender
 {
-    // --- ASYNCHRONOUS REQUEST --- //
     NSURLRequest *urlRequest = [self _randomRequest];
     
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     
-    // Starting the request
-    [connectionManager performRequest:urlRequest
-                       progressStatus:^(NSDictionary *progressStatus) {
-                           CGFloat downloadProgress = [[progressStatus valueForKey:AMAsynchronousConnectionStatusDownloadProgressKey] floatValue];
-                           _progressBar.progress = downloadProgress;
-                       } completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
-                           if (!error)
-                               [self _setImageFromData:data];
-                       }];
+    _oldConnectionKey = [connectionManager performRequest:urlRequest
+                                                 priority:AMConnectionPriorityNormal
+                                           progressStatus:^(NSDictionary *progressStatus) {
+                                               
+                                               CGFloat downloadProgress = [[progressStatus valueForKey:AMAsynchronousConnectionStatusDownloadProgressKey] floatValue];
+                                               _progressBar.progress = downloadProgress;
+                                               
+                                           } completionBlock:^(NSURLResponse *response, NSData *data, NSError *error, NSInteger key) {
+                                               
+                                               if (!error)
+                                                   [self _setImageFromData:data];
+                                               
+                                               [self _refreshViewsData];                                               
+                                           }];
+    
+    [self _refreshViewsData];
+}
+
+- (IBAction)cancelLastConnection:(id)sender
+{
+    AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
+    [connectionManager cancelRequestWithKey:_oldConnectionKey];
+    
+    [self performSelector:@selector(_refreshViewsData) withObject:nil afterDelay:0.1];
+}
+
+- (IBAction)stepperValueDidChange:(id)sender
+{
+    NSInteger value = _stepper.value;
+    
+    AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
+    connectionManager.maxConcurrentConnectionCount = value;
+    
+    [self _refreshViewsData];
 }
 
 #pragma mark Private Method
@@ -112,6 +115,14 @@
 {
     UIImage *image = [[UIImage alloc] initWithData:data];
     _imageView.image = image;
+}
+
+- (void)_refreshViewsData
+{
+    AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
+    
+    _maxConcurrentConnectionCountLabel.text = [NSString stringWithFormat:@"%d", connectionManager.maxConcurrentConnectionCount];
+    _activeOperationsLabel.text = [NSString stringWithFormat:@"%d", [[connectionManager operationQueueForIdentifier:nil] operationCount]];
 }
 
 @end

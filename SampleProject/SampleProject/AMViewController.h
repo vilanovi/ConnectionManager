@@ -13,7 +13,12 @@
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIProgressView *progressBar;
 
-- (IBAction)operationBasedAction:(id)sender;
+@property (weak, nonatomic) IBOutlet UILabel *activeOperationsLabel;
+@property (weak, nonatomic) IBOutlet UILabel *maxConcurrentConnectionCountLabel;
+@property (weak, nonatomic) IBOutlet UIStepper *stepper;
+
 - (IBAction)asynchornousAction:(id)sender;
+- (IBAction)cancelLastConnection:(id)sender;
+- (IBAction)stepperValueDidChange:(id)sender;
 
 @end

@@ -25,6 +25,7 @@
 - (id)initWithRequest:(NSURLRequest*)request progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error))completionBlock;
 
 - (void)start;
+- (void)cancel;
 
 @property (nonatomic, strong, readonly) NSURLRequest *request;
 @property (nonatomic, strong, readonly) void (^progressStatusBlock)(NSDictionary *info);

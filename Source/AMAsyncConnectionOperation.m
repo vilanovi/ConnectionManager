@@ -1,47 +1,42 @@
 //
-//  AMAsynchronousConnection.m
+//  AMAsyncConnectionOperation.m
 //  SampleProject
 //
-//  Created by Joan Martin on 10/5/12.
+//  Created by Joan Martin on 11/27/12.
 //  Copyright (c) 2012 AugiaMobile. All rights reserved.
 //
 
-#import "AMAsynchronousConnection.h"
+#import "AMAsyncConnectionOperation.h"
 
+NSString * const AMAsynchronousConnectionStatusDownloadProgressKey = @"AMAsynchronousConnectionStatusDownloadProgressKey";
+NSString * const AMAsynchronousConnectionStatusUploadProgressKey = @"AMAsynchronousConnectionStatusUploadProgressKey";
+NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsynchronousConnectionStatusReceivedURLHeadersKey";
 
-@interface AMAsynchronousConnection () <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-
-@end
-
-@implementation AMAsynchronousConnection
+@implementation AMAsyncConnectionOperation
 {
-    NSMutableData *_data;
+    CGFloat _expectedContentLength;
+    
+    NSMutableData* _data;
     NSURLResponse *_response;
     NSError *_error;
-    
+        
+    NSPort *_port;
+    NSRunLoop *_runLoop;
     NSURLConnection *_connection;
-    
-    long long _expectedContentLength;
 }
 
 - (id)init
 {
-    return [self initWithRequest:nil progressStatus:NULL completionBlock:NULL];
+    return [self initWithRequest:nil completionBlock:NULL];
 }
 
-- (id)initWithRequest:(NSURLRequest*)request completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error))completionBlock
-{
-    return [self initWithRequest:request progressStatus:NULL completionBlock:completionBlock];
-}
-
-- (id)initWithRequest:(NSURLRequest*)request progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error))completionBlock
+- (id)initWithRequest:(NSURLRequest*)request completionBlock:(void (^)(NSURLResponse*, NSData*, NSError*))completion
 {
     self = [super init];
     if (self)
     {
         _request = request;
-        _progressStatusBlock = progressStatusBlock;
-        _completionBlock = completionBlock;
+        _completion = completion;
         
         _data = [NSMutableData data];
         _expectedContentLength = 0.0f;
@@ -50,32 +45,57 @@
     return self;
 }
 
-#pragma mark Public Methods
-
-- (void)start
+- (void)cancel
 {
-    _connection = [[NSURLConnection alloc] initWithRequest:_request delegate:self startImmediately:NO];
+    [super cancel];
+    [self _stopConnection];
+}
 
-    NSRunLoop * runLoop = [NSRunLoop mainRunLoop];
-    [_connection scheduleInRunLoop:runLoop forMode:NSRunLoopCommonModes];
+- (void)concurrentMain
+{
+    _port = [NSPort port];
+    _runLoop = [NSRunLoop currentRunLoop];
     
+    _connection = [[NSURLConnection alloc] initWithRequest:_request delegate:self startImmediately:NO];
+    
+    [_runLoop addPort:_port forMode:NSDefaultRunLoopMode];
+    [_connection scheduleInRunLoop:_runLoop forMode:NSDefaultRunLoopMode];
     [_connection start];
+        
+    while (_connection != nil)
+    {
+        [_runLoop runUntilDate:[NSDate distantFuture]];
+    }
+}
+
+- (void)operationDidFinish
+{        
+    if (!self.isCancelled)
+    {
+        if (_completion)
+            _completion(_response,_data,_error);
+    }
 }
 
 #pragma mark Private Methods
 
+- (void)_stopConnection
+{
+    [_connection cancel];
+    
+    [_port invalidate];
+    [_runLoop removePort:_port forMode:NSDefaultRunLoopMode];
+    _port = nil;
+    
+    _connection = nil;
+}
 
 #pragma mark NSURLConnectionDelegate
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     _error = error;
-    
-    if (_completionBlock)
-        _completionBlock(_response,_data,_error);
-    
-    if ([_delegate respondsToSelector:@selector(didFinishAsynchronousConnection:)])
-        [_delegate didFinishAsynchronousConnection:self];
+    [self _stopConnection];
 }
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
@@ -114,7 +134,7 @@
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
     [_data appendData:data];
-
+    
     float progress = ((float)_data.length) / ((float)_expectedContentLength);
     
     if (_progressStatusBlock)
@@ -124,18 +144,14 @@
 - (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 {
     float progress = ((float)totalBytesWritten)/((float)totalBytesExpectedToWrite);
- 
+    
     if (_progressStatusBlock)
         _progressStatusBlock(@{AMAsynchronousConnectionStatusUploadProgressKey:[NSNumber numberWithFloat:progress]});
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-    if (_completionBlock)
-        _completionBlock(_response,_data,_error);
-    
-    if ([_delegate respondsToSelector:@selector(didFinishAsynchronousConnection:)])
-        [_delegate didFinishAsynchronousConnection:self];
+    [self _stopConnection];
 }
 
 @end

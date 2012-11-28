@@ -18,7 +18,7 @@
 {
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     connectionManager.showsNetworkActivityIndicator = YES; // <--- SHOW THE NETWORK ACTIVITY INDICATOR
-    connectionManager.maxConcurrentConnectionCount = 1; // <--- SET THE MAX NUMBER OF CONCURRENT CONNECTINOS (QUEUE-BASED)
+    connectionManager.maxConcurrentConnectionCount = 2; // <--- SET THE MAX NUMBER OF CONCURRENT CONNECTIONS IN FOR THE DEFAULT QUEUE
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.viewController = [[AMViewController alloc] initWithNibName:@"AMViewController" bundle:nil];
