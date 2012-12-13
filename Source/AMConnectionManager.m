@@ -6,22 +6,25 @@
 //  Copyright (c) 2012 AugiaMobile. All rights reserved.
 //
 
-#import "AMConnectionManager.h"
+#import "AMConnectionManager_Private.h"
+
+#import "AMAsyncConnectionOperation_Private.h"
 
 NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManagerDefaultQueueIdentifier";
 
-@interface AMConnectionManager ()
+@interface AMConnectionManager () <UIAlertViewDelegate>
 
 @end
 
 @implementation AMConnectionManager
 {
     NSMutableDictionary *_queues;
-    
-    NSInteger _numberOfActiveConnections;
-    
+    NSMutableDictionary *_pausedOperations;
+        
     NSMutableDictionary *_operations;
     NSInteger _lastKey;
+    
+    BOOL _isShowingAlert;
 }
 
 @dynamic maxConcurrentConnectionCount;
@@ -31,7 +34,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     static dispatch_once_t pred = 0;
     __strong static id _sharedObject = nil;
     dispatch_once(&pred, ^{
-        _sharedObject = [[self alloc] init];
+        _sharedObject = [[AMConnectionManager alloc] init];
     });
     return _sharedObject;
 }
@@ -42,10 +45,11 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     if (self)
     {
         _queues = [NSMutableDictionary dictionary];
+        _pausedOperations = [NSMutableDictionary dictionary];
         
-        _numberOfActiveConnections = 0;
         _lastKey = -1;
         _operations = [NSMutableDictionary dictionary];
+        _showConnectionErrors = YES;
     }
     return self;
 }
@@ -82,6 +86,74 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     [operation setQueuePriority:priority];
 }
 
+- (void)freezeQueueWithIdentifier:(NSString*)identifier
+{
+    NSOperationQueue *queue = [_queues valueForKey:identifier];
+    NSMutableArray *pausedOperations = [_pausedOperations valueForKey:identifier];
+    
+    [queue setSuspended:YES];
+    
+    if (!pausedOperations)
+    {
+        pausedOperations = [NSMutableArray array];
+        [_pausedOperations setValue:pausedOperations forKey:identifier];
+    }
+    
+    for (AMAsyncConnectionOperation *operation in queue.operations)
+    {
+        if (operation.isExecuting)
+        {
+            [operation cancel];
+            [pausedOperations addObject:operation];
+        }
+    }
+}
+
+- (void)unfreezeQueueWithIdentifier:(NSString*)identifier
+{
+    NSOperationQueue *queue = [_queues valueForKey:identifier];
+    NSMutableArray *pausedOperations = [_pausedOperations valueForKey:identifier];
+    
+    for (AMAsyncConnectionOperation *operation in pausedOperations)
+    {
+        AMAsyncConnectionOperation *newOperation = [[AMAsyncConnectionOperation alloc] initWithRequest:operation.request completionBlock:operation.completion];
+        newOperation.queuePriority = NSOperationQueuePriorityVeryHigh;
+        newOperation.connectionManagerKey = operation.connectionManagerKey;
+        
+        __weak AMConnectionManager *connectionManager = self;
+        [newOperation setCompletionBlock:^{
+            [_operations removeObjectForKey:operation.connectionManagerKey];
+            [connectionManager _refreshNetworkActivityIndicatorState];
+        }];
+        
+        [_operations setObject:newOperation forKey:newOperation.connectionManagerKey];
+
+        [queue addOperation:newOperation];
+        [self _refreshNetworkActivityIndicatorState];
+    }
+    
+    [pausedOperations removeAllObjects];
+    [queue setSuspended:NO];
+}
+
+- (void)freeze
+{
+    NSArray *allKeys = [_queues allKeys];
+    for (NSString *key in allKeys)
+    {
+        [self freezeQueueWithIdentifier:key];
+    }
+}
+
+- (void)unfreeze
+{
+    NSArray *allKeys = [_queues allKeys];
+    for (NSString *key in allKeys)
+    {
+        [self unfreezeQueueWithIdentifier:key];
+    }
+}
+
 - (NSOperationQueue*)operationQueueForIdentifier:(NSString*)identifier
 {
     return [self _queueWithIdentifier:identifier];
@@ -94,17 +166,16 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     NSInteger operationKey = [self _nextKey];
     
     NSNumber *numberKey = [NSNumber numberWithInteger:operationKey];
+    operation.connectionManagerKey = numberKey;
+    
     [_operations setObject:operation forKey:numberKey];
     
+    __weak AMConnectionManager *connectionManager = self;
     [operation setCompletionBlock:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_operations removeObjectForKey:numberKey];
-            _numberOfActiveConnections -= 1;
-            [self _refreshNetworkActivityIndicatorState];
-        });
+        [_operations removeObjectForKey:numberKey];
+        [connectionManager _refreshNetworkActivityIndicatorState];
     }];
     
-    _numberOfActiveConnections++;
     [queue addOperation:operation];
     [self _refreshNetworkActivityIndicatorState];
     
@@ -152,19 +223,17 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     operation.queuePriority = priority;
     
     NSNumber *numberKey = [NSNumber numberWithInteger:operationKey];
+    operation.connectionManagerKey = numberKey;
     [_operations setObject:operation forKey:numberKey];
     
+    __weak AMConnectionManager *connectionManager = self;
     [operation setCompletionBlock:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_operations removeObjectForKey:numberKey];
-            _numberOfActiveConnections -= 1;
-            [self _refreshNetworkActivityIndicatorState];
-        });
+        [_operations removeObjectForKey:numberKey];
+        [connectionManager _refreshNetworkActivityIndicatorState];
     }];
     
     NSOperationQueue *queue = [self _queueWithIdentifier:AMConnectionManagerDefaultQueueIdentifier];
     
-    _numberOfActiveConnections++;
     [queue addOperation:operation];
     [self _refreshNetworkActivityIndicatorState];
     
@@ -194,9 +263,12 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     if (!_showsNetworkActivityIndicator)
         return;
     
-    BOOL state = _numberOfActiveConnections > 0 ? YES : NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
         
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:state];
+        BOOL state = _operations.count > 0;
+        
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:state];
+    });
 }
 
 - (NSInteger)_nextKey
@@ -210,6 +282,39 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     }
     
     return operationKey;
+}
+
+- (void)_presentAlertViewForError:(NSError*)error;
+{
+    if (!_showConnectionErrors)
+        return;
+        
+    @synchronized(self)
+    {
+        if (_isShowingAlert)
+            return;
+        
+        _isShowingAlert = YES;
+    }
+    
+    if (![NSThread isMainThread])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connection Error",nil)
+                                                                message:error.localizedDescription
+                                                               delegate:self
+                                                      cancelButtonTitle:NSLocalizedString(@"Dimsiss",nil)
+                                                      otherButtonTitles:nil];
+            [alertView show];
+        });
+    }
+}
+
+#pragma mark UIAlertView
+
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    _isShowingAlert = NO;
 }
 
 @end

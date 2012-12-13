@@ -26,6 +26,8 @@
 /* Begin PBXFileReference section */
 		D215F2621664A3610013B2C0 /* AMAsyncConnectionOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMAsyncConnectionOperation.h; sourceTree = "<group>"; };
 		D215F2631664A3610013B2C0 /* AMAsyncConnectionOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMAsyncConnectionOperation.m; sourceTree = "<group>"; };
+		D24E137F167994CF0029EED6 /* AMAsyncConnectionOperation_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AMAsyncConnectionOperation_Private.h; sourceTree = "<group>"; };
+		D24E1381167994D50029EED6 /* AMConnectionManager_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AMConnectionManager_Private.h; sourceTree = "<group>"; };
 		D2A1B4F31654AE810099C7B7 /* SampleProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SampleProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2A1B4F71654AE810099C7B7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D2A1B4F91654AE810099C7B7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -129,8 +131,10 @@
 				D2A1B5221654C3350099C7B7 /* AMConcurrentOperation.m */,
 				D215F2621664A3610013B2C0 /* AMAsyncConnectionOperation.h */,
 				D215F2631664A3610013B2C0 /* AMAsyncConnectionOperation.m */,
+				D24E137F167994CF0029EED6 /* AMAsyncConnectionOperation_Private.h */,
 				D2A1B5251654C3350099C7B7 /* AMConnectionManager.h */,
 				D2A1B5261654C3350099C7B7 /* AMConnectionManager.m */,
+				D24E1381167994D50029EED6 /* AMConnectionManager_Private.h */,
 			);
 			name = Source;
 			path = ../../Source;

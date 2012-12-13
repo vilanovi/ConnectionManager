@@ -6,7 +6,9 @@
 //  Copyright (c) 2012 AugiaMobile. All rights reserved.
 //
 
-#import "AMAsyncConnectionOperation.h"
+#import "AMAsyncConnectionOperation_Private.h"
+
+#import "AMConnectionManager_Private.h"
 
 NSString * const AMAsynchronousConnectionStatusDownloadProgressKey = @"AMAsynchronousConnectionStatusDownloadProgressKey";
 NSString * const AMAsynchronousConnectionStatusUploadProgressKey = @"AMAsynchronousConnectionStatusUploadProgressKey";
@@ -96,6 +98,8 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
 {
     _error = error;
     [self _stopConnection];
+    
+    [[AMConnectionManager defaultManager] _presentAlertViewForError:error];
 }
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace

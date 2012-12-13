@@ -12,8 +12,6 @@
 
 extern NSString * const AMConnectionManagerDefaultQueueIdentifier;
 
-// --- OperationQueue-Based Connections -- //
-
 /*!
  * @typedef AMConnectionPriority
  * @abstract These are the available priorities to assign to connection requests.
@@ -61,6 +59,10 @@ typedef enum {
  */
 @property (nonatomic, strong) NSArray *trustedHosts;
 
+/*!
+ * When the attribute is set to YES (the default) the connection manager present alert views when connection errors occurs.
+ */
+@property (nonatomic, assign) BOOL showConnectionErrors;
 
 /*!
  * Configure the max number of concurrent connections for a specific queue.
@@ -82,6 +84,30 @@ typedef enum {
  * @discussion If the request has been already executed or the key is unknown, this method does nothing.
  */
 - (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key;
+
+/*!
+ * This method freezes the queue with the given identifier: supsends the queue and pauses the executing connections.
+ * @discussion Because it is not possible to pause a connection, this method cancel the executing connections and these can be fired again calling the -unfreezeQueueWithIdentifier: method.
+ */
+- (void)freezeQueueWithIdentifier:(NSString*)identifier;
+
+/*!
+ * This method unfreezes the queue with the given identifier: restarts the queue and the paused executing connections.
+ * @discussion Because it is not possible to pause a connection, this method fires from scratch the paused connections. The corresponding paused connections keys are keept the same.
+ */
+- (void)unfreezeQueueWithIdentifier:(NSString*)identifier;
+
+/*!
+ * Calling this method all the queues are stopped and all the current executing operations are paused.
+ * @discussion This method calls -freezeQueueWithIdentifier: for all the given identifiers.
+ */
+- (void)freeze;
+
+/*!
+ * This method unpauses all the paused operations and restart queues again.
+ * @discussion This method calls -unfreezeQueueWithIdentifier: for all the given identifiers.
+ */
+- (void)unfreeze;
 
 /*!
  * Returns the operation queue for the given identifier.
