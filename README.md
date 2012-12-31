@@ -3,23 +3,20 @@ ConnectionManager
 
 ####Easy management for connections
 
-Here I present a very simple framework to handle connections in a very effitien and easy way. Just give a **NSURLRequest** and you will have in return the result of a **NSURLConnection**. 
+Here I present a very simple framework to handle connections in a very efficient and easy way. Just give a **NSURLRequest** and you will have in return the result of a **NSURLConnection**. 
 
 The connections are performed asynchronously and the framework allows you to:
 
 * Cancel requests
 * Set priorities
-* Set a maximum number of concurrent connections 
-* Keep tracking of the state of multiple connections runing at same time. 
+* Manage multiple connection queues
+* Configure connection queues individualy
+* Pause and restart connections
+* Get feedback of downloading/uploading status
+* Define credentials and trusted servers
+* Get the return of the connection using blocks
 
-Also, you can:
-
-* Get feedback of downloading/uploading status (progress)
-* Use/define credentials and trusted servers
-
-The framework uses **NSOperationQueue** to perform concurrent connections and manipulate queued calls. 
-
-Also, all the completions blocks are called in the main thread.
+The framework uses **NSOperationQueue** to perform concurrent connections and manipulate queued calls using asynchronous **NSOperation**s.
 
 ##Example of use
 
@@ -29,47 +26,91 @@ First of all, lets get the instance of the connection manager:
 
 	AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
 
-Right now, we can configure if we want to display the iOS network activity indicator when some connection is being performed and the maximum number of concurrent connections for queue-based connections. 
+We can configure the manager to display the iOS network activity indicator when some connection is being performed:
 
     connectionManager.showsNetworkActivityIndicator = YES; 
+    
+Also, we will setup the default connection queue to handle at most 10 connections at same time:
+    
     connectionManager.maxConcurrentConnectionCount = 10;
+    
+We can configure manually a connection queue by getting the **NSOperationQueue** instance and configure it manually:
 
-###Queue-Based Connections
+    NSOperationQueue *queue = [connectionManager operationQueueForIdentifier:@"SOME_IDENTIFIER"];
+    
+    // Configure the queue here
+    
+Use an identifier as nil or **AMConnectionManagerDefaultQueueIdentifier** to get the default connection queue.
+    
+
+###Performing connections in the default queue
 
 Lets create a request first:
 
-	NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"..."]];
+	NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"SOME_URL"]];
 
-Then, we are going to send this request using a **queue-based operation**:
+Then, we are going to send this request using a the default connection queue:
 	
     NSInteger connectionKey = [connectionManager performRequest:urlRequest completionBlock:^(NSURLResponse *response, NSData *data, NSError *error, NSInteger key) {
 		// Handle here the connection response
     }];
 
-The `key` in the completionBlock is the key returned while calling the method (in this case `connectionKey`).
+The `key` in the completionBlock is the key returned when calling the method (in this case `connectionKey`).
 
-Now, we can change the priority of the request doing:
+There are different methods to perform a request in the default queue. For example, you can configure the progress status and the connection priority by calling:
+
+    NSInteger connectionKey = [connectionManager performRequest:urlRequest
+                                                 priority:AMConnectionPriorityNormal
+                                           progressStatus:^(NSDictionary *progressStatus) {
+                                              // Handle the progres status here                             
+                                           } completionBlock:^(NSURLResponse *response, NSData *data, NSError *error, NSInteger key) {
+                                               // Handle the connection response
+                                           }];
+
+###Using multiple queues
+
+In order to use different queues you should create a **AMAsyncConnectionOperation** and pass it to the connection manager giving the desired queue identifier:
+
+    AMAsyncConnectionOperation *operation = [[AMAsyncConnectionOperation alloc] initWithRequest:urlRequest completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
+            // Handle here the connection response
+    }];
+    
+    operation.progressStatusBlock = ^(NSDictionary *info) {
+        // Handle the progress status here
+    };
+    
+    NSInteger connectionKey = [connectionManager performConnectionOperation:operation inQueue:@"SOME_IDENTIFIER"];
+
+Use an identifier as nil or **AMConnectionManagerDefaultQueueIdentifier** to use the default connection queue.
+
+###Changing priorities and canceling connections
+
+We can change the priority of the request doing, for example:
 
 	[connectionManager changeToPriority:AMConnectionPriorityVeryHigh requestWithKey:connectionKey];
 
 Also, we can cancel queued (but not started) connections by doing:
 
 	[connectionManager cancelRequestWithKey:connectionKey]; 
+	
+###Pausing and restarting connection queues 
 
-###Simple Asynchronous Connections
+The Connection Manager supports pausing connection queues. You can pause and restart a specific queue or all queues. When pausing a connection queue, all current queued connections are canceled and refired when restarting. 
 
-If you want to have feedback about your connection (as download/uplaod progress) or use credentials or trusted servers, you can use simple asynchronous connections. A typical call should be:
+To pause and restart a specific connection queue:
 
-	[connectionManager performRequest:urlRequest
-                       progressStatus:^(NSDictionary *progressStatus) {
-							// Get current status from the progressStatus dictionary
-                       } completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
-							// Handle here the connection response
-                       }];
+    // Pause
+    [connectionManager freezeQueueWithIdentifier:@"SOME_IDENTIFIER"];
+    
+    // Restart
+    [connectionManager unfreezeQueueWithIdentifier:@"SOME_IDENTIFIER"];
 
-From the `progressStatus` dictionary you can get:
+To pause and restart all connection queues:
 
-* Download progress (float in [0,1]) using the key `AMAsynchronousConnectionStatusDownloadProgressKey`
-* Upload progress (float in [0,1]) using the key `AMAsynchronousConnectionStatusUploadProgressKey`
-* The headers of the response while availables using the key`AMAsynchronousConnectionStatusReceivedURLHeadersKey`
-
+    // Pause
+    [connectionManager freeze];
+    
+    // Restart
+    [connectionManager unfreeze];
+    
+The connection manager doesn't support persistent connection queues freezing trought multiple app executions.

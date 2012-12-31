@@ -80,7 +80,7 @@
                                                
                                                [self _refreshViewsData];                                               
                                            }];
-    
+
     [self _refreshViewsData];
 }
 
