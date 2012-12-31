@@ -114,3 +114,4 @@ To pause and restart all connection queues:
     [connectionManager unfreeze];
     
 The connection manager doesn't support persistent connection queues freezing trought multiple app executions.
+
