@@ -1,9 +1,9 @@
 //
 //  AMConcurrentOperation.m
-//  SampleProject
+//  ConnectionManager
 //
 //  Created by Joan Martin on 10/4/12.
-//  Copyright (c) 2012 AugiaMobile. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import "AMConcurrentOperation.h"

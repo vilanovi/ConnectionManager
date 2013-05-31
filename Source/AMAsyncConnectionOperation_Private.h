@@ -1,9 +1,9 @@
 //
 //  AMAsyncConnectionOperation_Private.h
-//  CitizenTV
+//  ConnectionManager
 //
 //  Created by Joan Martin on 12/13/12.
-//  Copyright (c) 2012 MetaMedia. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import "AMAsyncConnectionOperation.h"

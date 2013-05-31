@@ -1,9 +1,9 @@
 //
 //  AMAsyncConnectionOperation.m
-//  SampleProject
+//  ConnectionManager
 //
 //  Created by Joan Martin on 11/27/12.
-//  Copyright (c) 2012 AugiaMobile. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import "AMAsyncConnectionOperation_Private.h"
@@ -60,6 +60,8 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     
     _connection = [[NSURLConnection alloc] initWithRequest:_request delegate:self startImmediately:NO];
     
+//    NSLog(@"REQUEST HEADERS: %@",_request.allHTTPHeaderFields.description);
+    
     [_runLoop addPort:_port forMode:NSDefaultRunLoopMode];
     [_connection scheduleInRunLoop:_runLoop forMode:NSDefaultRunLoopMode];
     [_connection start];
@@ -74,6 +76,8 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
 {        
     if (!self.isCancelled)
     {
+//        NSLog(@"RESPONSE HEADERS: %@",[(NSHTTPURLResponse*)_response allHeaderFields].description);
+        
         if (_completion)
             _completion(_response,_data,_error);
     }
@@ -82,7 +86,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
 #pragma mark Private Methods
 
 - (void)_stopConnection
-{
+{    
     [_connection cancel];
     
     [_port invalidate];
@@ -92,6 +96,23 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     _connection = nil;
 }
 
+#pragma mark - Protocols
+
+#pragma mark NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    AMAsyncConnectionOperation *operation = [[AMAsyncConnectionOperation allocWithZone:zone] initWithRequest:_request
+                                                                                             completionBlock:_completion];
+    operation.progressStatusBlock = _progressStatusBlock;
+    operation.connectionManagerKey = _connectionManagerKey;
+    
+    operation.queuePriority = self.queuePriority;
+    operation.completionBlock = self.completionBlock;
+    
+    return operation;
+}
+
 #pragma mark NSURLConnectionDelegate
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
@@ -99,7 +120,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     _error = error;
     [self _stopConnection];
     
-    [[AMConnectionManager defaultManager] _presentAlertViewForError:error];
+    [[AMConnectionManager defaultManager] AM_presentAlertViewForError:error];
 }
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
@@ -128,7 +149,12 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     {
         NSHTTPURLResponse *httpResponse = (id)response;
         if ([httpResponse statusCode] == 200)
+        {
             _expectedContentLength = [httpResponse expectedContentLength];
+            
+//            NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:httpResponse.allHeaderFields forURL:_request.URL];
+//            NSLog(@"COOKIES: %@",cookies.description);
+        }
     }
     
     if (_progressStatusBlock)

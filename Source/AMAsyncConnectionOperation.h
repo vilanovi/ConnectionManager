@@ -1,9 +1,9 @@
 //
 //  AMAsyncConnectionOperation.h
-//  SampleProject
+//  ConnectionManager
 //
 //  Created by Joan Martin on 11/27/12.
-//  Copyright (c) 2012 AugiaMobile. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import "AMConcurrentOperation.h"
@@ -13,7 +13,7 @@ extern NSString * const AMAsynchronousConnectionStatusDownloadProgressKey;
 extern NSString * const AMAsynchronousConnectionStatusUploadProgressKey;
 extern NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey;
 
-@interface AMAsyncConnectionOperation : AMConcurrentOperation <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface AMAsyncConnectionOperation : AMConcurrentOperation <NSCopying, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
 /*!
  * Default initializer.

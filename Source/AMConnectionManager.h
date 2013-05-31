@@ -1,14 +1,18 @@
 //
 //  AMConnectionManager.h
-//  SampleProject
+//  ConnectionManager
 //
 //  Created by Joan Martin on 10/3/12.
-//  Copyright (c) 2012 AugiaMobile. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
 #import "AMAsyncConnectionOperation.h"
+
+extern NSString * const AMConnectionManagerConnectionsDidStartNotification;
+extern NSString * const AMConnectionManagerConnectionsDidFinishNotification;
+extern NSString * const AMConnectionManagerConnectionsQueueIdentifierKey;
 
 extern NSString * const AMConnectionManagerDefaultQueueIdentifier;
 
@@ -22,7 +26,8 @@ extern NSString * const AMConnectionManagerDefaultQueueIdentifier;
  * @constant AMConnectionPriorityVeryHigh The highest priority.
  * @discussion The AMConnectionPriority is equivalent to NSOperationQueuePriority.
  */
-typedef enum {
+typedef enum
+{
     AMConnectionPriorityVeryLow = NSOperationQueuePriorityVeryLow,
     AMConnectionPriorityLow = NSOperationQueuePriorityLow,
     AMConnectionPriorityNormal = NSOperationQueuePriorityNormal,
@@ -74,8 +79,9 @@ typedef enum {
  * This method allow request cancelation.
  * @param key The request key.
  * @discussion If the request has been already executed or the key is unknown, this method does nothing.
+ * @return The method return a new copy of the connection operation that can be reused to perform the connection again if needed.
  */
-- (void)cancelRequestWithKey:(NSInteger)key;
+- (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key;
 
 /*!
  * Changes the priority of the request associated to the given key.
@@ -87,12 +93,14 @@ typedef enum {
 
 /*!
  * This method freezes the queue with the given identifier: supsends the queue and pauses the executing connections.
+ * @param identifier The queue identifier. Pass nil to refere to the default queue.
  * @discussion Because it is not possible to pause a connection, this method cancel the executing connections and these can be fired again calling the -unfreezeQueueWithIdentifier: method.
  */
 - (void)freezeQueueWithIdentifier:(NSString*)identifier;
 
 /*!
  * This method unfreezes the queue with the given identifier: restarts the queue and the paused executing connections.
+ * @param identifier The queue identifier. Pass nil to refere to the default queue.
  * @discussion Because it is not possible to pause a connection, this method fires from scratch the paused connections. The corresponding paused connections keys are keept the same.
  */
 - (void)unfreezeQueueWithIdentifier:(NSString*)identifier;
@@ -111,7 +119,8 @@ typedef enum {
 
 /*!
  * Returns the operation queue for the given identifier.
- * @return The operation queue
+ * @param identifier The queue identifier. Pass nil to get the default queue.
+ * @return The operation queue.
  * @discussion You can use this method in order to configure a queue manually.
  */
 - (NSOperationQueue*)operationQueueForIdentifier:(NSString*)identifier;
@@ -120,7 +129,7 @@ typedef enum {
  * Use this method to add manually a connection operation (AMConnectionOperation or AMAsyncConnectionOperation). This method enqueue the operation to the specified queue.
  * @param operation The operation to execute.
  * @param queueIdentifier An identifier of the queue. Pass nil to use the default queue.
- * @return 
+ * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
  */
 - (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier;
 
@@ -129,17 +138,30 @@ typedef enum {
  * @param request The request to perform.
  * @param completion The completion block with the response, the data and the error (in case of any problems).
  * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
- * @discussion The priority of this request is setted to AMConnectionPriorityNormal.
+ * @discussion The priority of this request is setted to AMConnectionPriorityNormal and the result operation will be inserted into the default queue.
  */
 - (NSInteger)performRequest:(NSURLRequest*)request
+            completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion;
+
+/*!
+ * Use this method to perform a request connection asynchronously and get back the response in the main thread.
+ * @param request The request to perform.
+ * @param queueIdentifier The identifier of the queue to perform the request. USe nil to use the default queue.
+ * @param completion The completion block with the response, the data and the error (in case of any problems).
+ * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ * @discussion The priority of this request is setted to AMConnectionPriorityNormal and the result operation will be inserted into the default queue.
+ */
+- (NSInteger)performRequest:(NSURLRequest*)request
+                    inQueue:(NSString*)queueIdentifier
             completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion;
 
 /*!
  * Use this method to perform a request connection asynchronously and get back the response in the main thread with a given priority.
  * @param request The request to perform.
- * @param priority
+ * @param priority The request priority.
  * @param completion The completion block with the response, the data and the error (in case of any problems).
  * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ * @discussion The result operation will be inserted into the default queue.
  */
 - (NSInteger)performRequest:(NSURLRequest*)request
                    priority:(AMConnectionPriority)priority
@@ -151,7 +173,7 @@ typedef enum {
  * @param progressStatus This block is potentially called multiple times, containing in the dictionary information about the headers and download & upload progress.
  * @param completionBlock This block is called when the connection ends.
  * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
- * @discussion The priority of this request is setted to AMConnectionPriorityNormal.
+ * @discussion The priority of this request is setted to AMConnectionPriorityNormal and the result operation will be inserted into the default queue.
  */
 - (NSInteger)performRequest:(NSURLRequest*)request
              progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock
@@ -160,13 +182,36 @@ typedef enum {
 /*!
  * This methods performs asynchornously a connection request.
  * @param request The request to perform.
+ * @param priority The request priority.
  * @param progressStatus This block is potentially called multiple times, containing in the dictionary information about the headers and download & upload progress.
  * @param completionBlock This block is called when the connection ends.
  * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ * @discussion The result operation will be inserted into the default queue.
  */
 - (NSInteger)performRequest:(NSURLRequest*)request
                    priority:(AMConnectionPriority)priority
              progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock
             completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion;
+
+/*!
+ * This methods performs asynchornously a connection request.
+ * @param request The request to perform.
+ * @param priority The request priority.
+ * @param queueIdentifier The identifier of the queue to perform the request. USe nil to use the default queue.
+ * @param progressStatus This block is potentially called multiple times, containing in the dictionary information about the headers and download & upload progress.
+ * @param completionBlock This block is called when the connection ends.
+ * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ * @discussion The result operation will be inserted into the default queue.
+ */
+- (NSInteger)performRequest:(NSURLRequest*)request
+                   priority:(AMConnectionPriority)priority
+                    inQueue:(NSString*)queueIdentifier
+             progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock
+            completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion;
+
+@property (nonatomic, strong) NSSet *backgroundExecutionQueueIdentifiers;
+
+- (void)addBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier;
+- (void)removeBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier;
 
 @end

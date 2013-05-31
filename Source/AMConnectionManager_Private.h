@@ -1,15 +1,15 @@
 //
 //  AMConnectionManager_Private.h
-//  CitizenTV
+//  ConnectionManager
 //
 //  Created by Joan Martin on 11/29/12.
-//  Copyright (c) 2012 MetaMedia. All rights reserved.
+//  Copyright (c) 2012 Joan Martin. All rights reserved.
 //
 
 #import "AMConnectionManager.h"
 
 @interface AMConnectionManager ()
 
-- (void)_presentAlertViewForError:(NSError*)error;
+- (void)AM_presentAlertViewForError:(NSError*)error;
 
 @end
