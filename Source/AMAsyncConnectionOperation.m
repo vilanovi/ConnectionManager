@@ -60,8 +60,6 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     
     _connection = [[NSURLConnection alloc] initWithRequest:_request delegate:self startImmediately:NO];
     
-//    NSLog(@"REQUEST HEADERS: %@",_request.allHTTPHeaderFields.description);
-    
     [_runLoop addPort:_port forMode:NSDefaultRunLoopMode];
     [_connection scheduleInRunLoop:_runLoop forMode:NSDefaultRunLoopMode];
     [_connection start];
@@ -76,8 +74,6 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
 {        
     if (!self.isCancelled)
     {
-//        NSLog(@"RESPONSE HEADERS: %@",[(NSHTTPURLResponse*)_response allHeaderFields].description);
-        
         if (_completion)
             _completion(_response,_data,_error);
     }
@@ -151,9 +147,6 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
         if ([httpResponse statusCode] == 200)
         {
             _expectedContentLength = [httpResponse expectedContentLength];
-            
-//            NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:httpResponse.allHeaderFields forURL:_request.URL];
-//            NSLog(@"COOKIES: %@",cookies.description);
         }
     }
     
