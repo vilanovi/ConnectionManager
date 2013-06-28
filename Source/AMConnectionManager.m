@@ -366,10 +366,10 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     if (![NSThread isMainThread])
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connection Error",nil)
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connection Error", @"[AMConnectionManager] AlertView title")
                                                                 message:error.localizedDescription
                                                                delegate:self
-                                                      cancelButtonTitle:NSLocalizedString(@"Dimsiss",nil)
+                                                      cancelButtonTitle:NSLocalizedString(@"Dimsiss", @"[AMConnectionManager] AlertView dismiss button")
                                                       otherButtonTitles:nil];
             [alertView show];
         });
