@@ -50,13 +50,37 @@ extern NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey;
 /// --------------------------------------------------------------------------------------------------------------------------------
 
 /*!
- * Trust the current request url host.
+ * Credential for Server Trust Authentication.
  */
-@property (nonatomic, assign) BOOL trustHost;
+@property (nonatomic, assign) BOOL serverTurstAuthentication;
 
 /*!
- * Credential
+ * Credential used for HTTP Basic Authentication, HTTP Digest Authentication or Client Certificate Authentication
  */
 @property (nonatomic, strong) NSURLCredential *credential;
+
+/*!
+ * If authentication fails, YES, otherwise NO.
+ */
+@property (nonatomic, assign, readonly) BOOL authenticationFailed;
+
+/*!
+ * If authentication is performed and it's invalid, this block will be called.
+ */
+@property (nonatomic, strong) void (^authenticationDidFail)(AMAsyncConnectionOperation *op, NSURLAuthenticationChallenge *challange);
+
+/*!
+ * Implement this block and return if it is possible to authenticate to the given protection space.
+ * @discussion The value returned for this block will override any previous behavior and if NO will not consider authentication even if the properties `credential` or `serverTrustAuthentication`  are defined.
+ */
+@property (nonatomic, strong) BOOL (^canAuthenticateAgainstProtectionSpace)(NSURLProtectionSpace *protectionSpace);
+
+/*!
+ * Implement this block to perform the authentication.
+ * @discussion By implementing this block the connection operation will ignore the properties `credential`and `serverTrustAuthentication`. It is going to be the block's implementation responsibility to perform the authentication.
+ *
+ * If you cancel the authentication, is your reponsibility to give feedback to the user telling why. Also, the authenticationDidFail block and the authentication delegate methods of the connection manager won't be called.
+ */
+@property (nonatomic, strong) void (^performAuthenticationWithChallenge)(NSURLAuthenticationChallenge *challenge);
 
 @end

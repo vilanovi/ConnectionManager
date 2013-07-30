@@ -37,6 +37,7 @@ typedef enum
 
 @class AMConcurrentOperation;
 @class AMAsyncConnectionOperation;
+@protocol AMConnectionManagerDelegate;
 
 /*!
  * This class manages connection requests asynchronously in order to control the concurrent executions. User can set the maximum concurrent number of connections, cancel queued requests, give priorities, etc. This class implements the singleton pattern in order to share a single instance.
@@ -278,5 +279,41 @@ typedef enum
  * @param host The host.
  */
 - (void)setCredential:(NSURLCredential*)credential forHost:(NSString*)host;
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Delegate
+/// --------------------------------------------------------------------------------------------------------------------------------
+
+@property (nonatomic, weak) id <AMConnectionManagerDelegate> delegate;
+
+@end
+
+/*!
+ * Protocol for ConnectionManager's delegate.
+ */
+@protocol AMConnectionManagerDelegate <NSObject>
+
+@optional
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Getting feedback of the operations
+/// --------------------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * When a connection fails, the connection manager notifies the delegate using this method.
+ * @param manager The connection manager.
+ * @param operation The operation responsible of the connection fail.
+ * @param error The connection error.
+ * @discussion If the receiver wants to resubmit the operation, first must perform a `copy` on the operation and then submit the copied instance.
+ */
+- (void)connectionManager:(AMConnectionManager*)manager connectionDidFailForConnectionOperation:(AMAsyncConnectionOperation*)operation error:(NSError*)error;
+
+/*!
+ * If a connection operation fails due the authentication, this method is called.
+ * @param manager The connection manager.
+ * @param operation The operation responsible of the authentication failing.
+ * @discussion If the receiver wants to resubmit the operation, first must perform a `copy` on the operation and then submit the copied instance.
+ */
+- (void)connectionManager:(AMConnectionManager*)manager authenticationDidFailForConnectionOperation:(AMAsyncConnectionOperation*)operation authenticationChallange:(NSURLAuthenticationChallenge*)challange;
 
 @end

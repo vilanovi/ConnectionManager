@@ -8,8 +8,23 @@
 
 #import "AMConnectionManager.h"
 
-@interface AMConnectionManager ()
+/*!
+ * Connection operations may call these methods. Do not perform any call to these methods, unexpected behaviour may happen.
+ */
+@interface AMConnectionManager (Private)
 
-- (void)AM_presentAlertViewForError:(NSError*)error;
+/*!
+ * When a connection operation fail notifies the connection manager through this method.
+ * @param op The connection operation.
+ * @param error The connection error.
+ */
+- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op connectionDidFailWithError:(NSError*)error;
+
+/*!
+ * When a connection operation fail in the authentication, notifies the connection manager through this method.
+ * @param op The connection operation.
+ * @param challange The authentication challange responsible of failing the authentication.
+ */
+- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op authenticationDidFailWithAuthenticationChallenge:(NSURLAuthenticationChallenge*)challange;
 
 @end

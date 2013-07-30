@@ -25,6 +25,8 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     NSPort *_port;
     NSRunLoop *_runLoop;
     NSURLConnection *_connection;
+    
+    BOOL _authenticationFailed;
 }
 
 - (id)init
@@ -42,9 +44,15 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
         
         _data = [NSMutableData data];
         _expectedContentLength = 0.0f;
-        _trustHost = NO;
+        _serverTurstAuthentication = NO;
+        _authenticationFailed = NO;
     }
     return self;
+}
+
+- (NSString*)description
+{
+    return [NSString stringWithFormat:@"%@ - %@",[super description], [self.connectionManagerKey description]];
 }
 
 - (void)cancel
@@ -116,37 +124,72 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     _error = error;
     [self _stopConnection];
     
-    [[AMConnectionManager defaultManager] AM_presentAlertViewForError:error];
+    [[AMConnectionManager defaultManager] AM_connectionOperation:self connectionDidFailWithError:error];
 }
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
 {
+    if (_canAuthenticateAgainstProtectionSpace)
+        return _canAuthenticateAgainstProtectionSpace(protectionSpace);
+    
     BOOL canAuthenticate = NO;
     
-    if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault])
+    if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    {
+        canAuthenticate = _serverTurstAuthentication;
+    }
+    else
     {
         canAuthenticate = _credential != nil;
     }
-    else if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
-    {
-        canAuthenticate = _trustHost;
-    }
-    
+        
     return canAuthenticate;
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault])
+    if (_performAuthenticationWithChallenge)
     {
-        [[challenge sender] useCredential:_credential forAuthenticationChallenge:challenge];
+        _performAuthenticationWithChallenge(challenge);
     }
-    else if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    else
     {
-        [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
+        if ([challenge previousFailureCount] == 0)
+        {
+            if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+            {
+                [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
+            }
+            else
+            {
+                if (_credential)
+                    [[challenge sender] useCredential:_credential forAuthenticationChallenge:challenge];
+                else
+                    [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];
+            }
+        }
+        else
+        {
+            _authenticationFailed = YES;
+            
+            if (_authenticationDidFail)
+                _authenticationDidFail(self, challenge);
+            
+            [[AMConnectionManager defaultManager] AM_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
+            
+            [[challenge sender] cancelAuthenticationChallenge:challenge];
+        }
     }
+}
+
+- (void)connection:(NSURLConnection *)connection didCancelAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+{
+    _authenticationFailed = YES;
     
-    [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];
+    if (_authenticationDidFail)
+        _authenticationDidFail(self, challenge);
+    
+    [[AMConnectionManager defaultManager] AM_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
 }
 
 #pragma mark NSURLConnectionDataDelegate

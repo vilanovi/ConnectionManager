@@ -64,7 +64,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
         
         _lastKey = -1;
         _operations = [NSMutableDictionary dictionary];
-        _showConnectionErrors = YES;
+        _showConnectionErrors = NO;
         
         _credentials = [NSMutableDictionary dictionary];
         
@@ -175,12 +175,12 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     
     NSInteger operationKey = [self AM_nextKey];
     
-    NSNumber *numberKey = [NSNumber numberWithInteger:operationKey];
+    NSNumber *numberKey = @(operationKey);
     operation.connectionManagerKey = numberKey;
     
     if (flag)
     {
-        operation.trustHost = [_trustedHosts containsObject:operation.request.URL.host];
+        operation.serverTurstAuthentication = [_trustedHosts containsObject:operation.request.URL.host];
         operation.credential = [_credentials valueForKey:operation.request.URL.host];
     }
     
@@ -261,13 +261,13 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     };
 
     AMAsyncConnectionOperation *operation = [[AMAsyncConnectionOperation alloc] initWithRequest:request completionBlock:connectionCompletion];
-    operation.trustHost = [_trustedHosts containsObject:request.URL.host];
+    operation.serverTurstAuthentication = [_trustedHosts containsObject:request.URL.host];
     operation.credential = [_credentials valueForKey:request.URL.host];
     
     operation.progressStatusBlock = progressStatusBlock;
     operation.queuePriority = priority;
     
-    NSNumber *numberKey = [NSNumber numberWithInteger:operationKey];
+    NSNumber *numberKey = @(operationKey);
     operation.connectionManagerKey = numberKey;
     [_operations setObject:operation forKey:numberKey];
     
@@ -287,13 +287,13 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key
 {
-    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
+    NSOperation *operation = [_operations objectForKey:@(key)];
     
     AMAsyncConnectionOperation *copy = [operation copy];
     
     [operation cancel];
     
-    [_operations removeObjectForKey:[NSNumber numberWithInteger:key]];
+    [_operations removeObjectForKey:@(key)];
     [self AM_refreshNetworkActivityIndicatorState];
     
     return copy;
@@ -301,7 +301,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
 {
-    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
+    NSOperation *operation = [_operations objectForKey:@(key)];
     [operation setQueuePriority:priority];
 }
 
@@ -389,17 +389,14 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
         _isShowingAlert = YES;
     }
     
-    if (![NSThread isMainThread])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connection Error", @"[AMConnectionManager] AlertView title")
-                                                                message:error.localizedDescription
-                                                               delegate:self
-                                                      cancelButtonTitle:NSLocalizedString(@"Dimsiss", @"[AMConnectionManager] AlertView dismiss button")
-                                                      otherButtonTitles:nil];
-            [alertView show];
-        });
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connection Error", @"[AMConnectionManager] AlertView title")
+                                                            message:error.localizedDescription
+                                                           delegate:self
+                                                  cancelButtonTitle:NSLocalizedString(@"Dimsiss", @"[AMConnectionManager] AlertView dismiss button")
+                                                  otherButtonTitles:nil];
+        [alertView show];
+    });
 }
 
 - (void)AM_notificationReceived:(NSNotification*)notification
@@ -511,6 +508,25 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
     _isShowingAlert = NO;
+}
+
+@end
+
+
+@implementation AMConnectionManager (Private)
+
+- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op connectionDidFailWithError:(NSError*)error
+{
+    [self AM_presentAlertViewForError:error];
+
+    if ([_delegate respondsToSelector:@selector(connectionManager:connectionDidFailForConnectionOperation:error:)])
+        [_delegate connectionManager:self connectionDidFailForConnectionOperation:op error:error];
+}
+
+- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op authenticationDidFailWithAuthenticationChallenge:(NSURLAuthenticationChallenge*)challange
+{
+    if ([_delegate respondsToSelector:@selector(connectionManager:authenticationDidFailForConnectionOperation:authenticationChallange:)])
+        [_delegate connectionManager:self authenticationDidFailForConnectionOperation:op authenticationChallange:challange];
 }
 
 @end
