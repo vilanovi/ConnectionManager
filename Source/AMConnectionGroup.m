@@ -102,7 +102,7 @@
     
     for (AMAsyncConnectionOperation *operation in _pausedConnections)
     {
-        NSInteger key = [connectionManager performConnectionOperation:operation inQueue:AMConnectionManagerDefaultQueueIdentifier];
+        NSInteger key = [connectionManager performConnectionOperation:operation inQueue:AMConnectionManagerDefaultQueueIdentifier useAuthentication:YES];
         [_connectionKeys addIndex:key];
     }
     

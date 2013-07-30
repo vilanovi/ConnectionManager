@@ -29,10 +29,11 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     
     BOOL _isShowingAlert;
     
-    
     UIBackgroundTaskIdentifier _bgTask;
     NSInteger _queuesNotEmpty;
     BOOL _isBackroundExecution;
+    
+    NSMutableDictionary *_credentials;
 }
 
 @dynamic maxConcurrentConnectionCount;
@@ -65,6 +66,8 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
         _operations = [NSMutableDictionary dictionary];
         _showConnectionErrors = YES;
         
+        _credentials = [NSMutableDictionary dictionary];
+        
         NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
         [nc addObserver:self selector:@selector(AM_notificationReceived:) name:UIApplicationDidEnterBackgroundNotification object:nil];
         [nc addObserver:self selector:@selector(AM_notificationReceived:) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -94,26 +97,6 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 - (void)setMaxConcurrentConnectionCount:(NSInteger)maxConcurrentConnectionCount inQueue:(NSString*)queueIdentifier
 {
     [[self AM_queueWithIdentifier:queueIdentifier] setMaxConcurrentOperationCount:maxConcurrentConnectionCount];
-}
-
-- (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key
-{
-    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
-    
-    AMAsyncConnectionOperation *copy = [operation copy];
-    
-    [operation cancel];
-    
-    [_operations removeObjectForKey:[NSNumber numberWithInteger:key]];
-    [self AM_refreshNetworkActivityIndicatorState];
-    
-    return copy;
-}
-
-- (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
-{
-    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
-    [operation setQueuePriority:priority];
 }
 
 - (void)freezeQueueWithIdentifier:(NSString*)identifier
@@ -183,12 +166,23 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier
 {
+    return [self performConnectionOperation:operation inQueue:queueIdentifier useAuthentication:NO];
+}
+
+- (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier useAuthentication:(BOOL)flag
+{
     NSOperationQueue *queue = [self AM_queueWithIdentifier:queueIdentifier];
     
     NSInteger operationKey = [self AM_nextKey];
     
     NSNumber *numberKey = [NSNumber numberWithInteger:operationKey];
     operation.connectionManagerKey = numberKey;
+    
+    if (flag)
+    {
+        operation.trustHost = [_trustedHosts containsObject:operation.request.URL.host];
+        operation.credential = [_credentials valueForKey:operation.request.URL.host];
+    }
     
     [_operations setObject:operation forKey:numberKey];
     
@@ -267,7 +261,9 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     };
 
     AMAsyncConnectionOperation *operation = [[AMAsyncConnectionOperation alloc] initWithRequest:request completionBlock:connectionCompletion];
-    operation.trustedHosts = _trustedHosts;
+    operation.trustHost = [_trustedHosts containsObject:request.URL.host];
+    operation.credential = [_credentials valueForKey:request.URL.host];
+    
     operation.progressStatusBlock = progressStatusBlock;
     operation.queuePriority = priority;
     
@@ -289,6 +285,26 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     return operationKey;
 }
 
+- (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key
+{
+    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
+    
+    AMAsyncConnectionOperation *copy = [operation copy];
+    
+    [operation cancel];
+    
+    [_operations removeObjectForKey:[NSNumber numberWithInteger:key]];
+    [self AM_refreshNetworkActivityIndicatorState];
+    
+    return copy;
+}
+
+- (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
+{
+    NSOperation *operation = [_operations objectForKey:[NSNumber numberWithInteger:key]];
+    [operation setQueuePriority:priority];
+}
+
 - (void)addBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier
 {
     _backgroundExecutionQueueIdentifiers = [_backgroundExecutionQueueIdentifiers setByAddingObject:queueIdentifier];
@@ -299,6 +315,16 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     NSMutableSet *set = [_backgroundExecutionQueueIdentifiers mutableCopy];
     [set removeObject:queueIdentifier];
     _backgroundExecutionQueueIdentifiers = [set copy];
+}
+
+- (NSURLCredential*)credentialForHost:(NSString*)host
+{
+    return [_credentials valueForKey:host];
+}
+
+- (void)setCredential:(NSURLCredential*)credential forHost:(NSString*)host
+{
+    [_credentials setValue:credential forKey:host];
 }
 
 #pragma mark Private Methods

@@ -15,12 +15,20 @@ extern NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey;
 
 @interface AMAsyncConnectionOperation : AMConcurrentOperation <NSCopying, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Creating and getting instances
+/// --------------------------------------------------------------------------------------------------------------------------------
+
 /*!
  * Default initializer.
  * @param request The NSURLRequest to perform.
  * @param completion The completion block with the results of the connection. This Block is executed in the main thread.
  */
 - (id)initWithRequest:(NSURLRequest*)request completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error))completion;
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Main attritubes
+/// --------------------------------------------------------------------------------------------------------------------------------
 
 /*!
  * The receiver's request.
@@ -37,9 +45,18 @@ extern NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey;
  */
 @property (nonatomic, strong) void (^progressStatusBlock)(NSDictionary *info);
 
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Authentication
+/// --------------------------------------------------------------------------------------------------------------------------------
+
 /*!
- * List of trusted hosts.
+ * Trust the current request url host.
  */
-@property (nonatomic, strong) NSArray *trustedHosts;
+@property (nonatomic, assign) BOOL trustHost;
+
+/*!
+ * Credential
+ */
+@property (nonatomic, strong) NSURLCredential *credential;
 
 @end

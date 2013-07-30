@@ -42,7 +42,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
         
         _data = [NSMutableData data];
         _expectedContentLength = 0.0f;
-        _trustedHosts = @[];
+        _trustHost = NO;
     }
     return self;
 }
@@ -121,15 +121,29 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
 {
-    return [protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust];
+    BOOL canAuthenticate = NO;
+    
+    if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault])
+    {
+        canAuthenticate = _credential != nil;
+    }
+    else if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    {
+        canAuthenticate = _trustHost;
+    }
+    
+    return canAuthenticate;
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault])
     {
-        if ([_trustedHosts containsObject:challenge.protectionSpace.host])
-            [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
+        [[challenge sender] useCredential:_credential forAuthenticationChallenge:challenge];
+    }
+    else if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    {
+        [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
     }
     
     [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];

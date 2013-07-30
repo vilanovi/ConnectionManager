@@ -43,11 +43,19 @@ typedef enum
  */
 @interface AMConnectionManager : NSObject
 
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Creating and getting instances
+/// --------------------------------------------------------------------------------------------------------------------------------
+
 /*!
  * Returns the default manager instance in order to use this class as a singleton.
  * @return The default manager instance.
  */
 + (AMConnectionManager*)defaultManager;
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Configuring the connection manager
+/// --------------------------------------------------------------------------------------------------------------------------------
 
 /*!
  * This property allows to turn on/off the UIApplication's networkActivityIndicator while requests are being performed.
@@ -60,11 +68,6 @@ typedef enum
 @property (nonatomic, readwrite) NSInteger maxConcurrentConnectionCount;
 
 /*!
- * Add trusted hosts for specific requests that uses credentials.
- */
-@property (nonatomic, strong) NSArray *trustedHosts;
-
-/*!
  * When the attribute is set to YES (the default) the connection manager present alert views when connection errors occurs.
  */
 @property (nonatomic, assign) BOOL showConnectionErrors;
@@ -75,21 +78,9 @@ typedef enum
  */
 - (void)setMaxConcurrentConnectionCount:(NSInteger)maxConcurrentConnectionCount inQueue:(NSString*)queueIdentifier;
 
-/*!
- * This method allow request cancelation.
- * @param key The request key.
- * @discussion If the request has been already executed or the key is unknown, this method does nothing.
- * @return The method return a new copy of the connection operation that can be reused to perform the connection again if needed.
- */
-- (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key;
-
-/*!
- * Changes the priority of the request associated to the given key.
- * @param priority The new priority.
- * @param key The request identifier.
- * @discussion If the request has been already executed or the key is unknown, this method does nothing.
- */
-- (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key;
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Freeze & unfreeze connections
+/// --------------------------------------------------------------------------------------------------------------------------------
 
 /*!
  * This method freezes the queue with the given identifier: supsends the queue and pauses the executing connections.
@@ -125,13 +116,27 @@ typedef enum
  */
 - (NSOperationQueue*)operationQueueForIdentifier:(NSString*)identifier;
 
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Performing Requests
+/// --------------------------------------------------------------------------------------------------------------------------------
+
 /*!
- * Use this method to add manually a connection operation (AMConnectionOperation or AMAsyncConnectionOperation). This method enqueue the operation to the specified queue.
+ * Use this method to add manually a connection operation. This method enqueue the operation to the specified queue.
  * @param operation The operation to execute.
  * @param queueIdentifier An identifier of the queue. Pass nil to use the default queue.
  * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ * @discussion Using this method the caller is responsible of set the credential and any authentication attribute in the connection operation.
  */
 - (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier;
+
+/*!
+ * Use this method to add manually a connection operation and set the authentication automatically or not. This method enqueue the operation to the specified queue.
+ * @param operation The operation to execute.
+ * @param queueIdentifier An identifier of the queue. Pass nil to use the default queue.
+ * @param flag If the caller want to use the already specified authentication challanges in the connection manager, set YES, otherwise NO.
+ * @return The method returns an integer used as a key to identify the request. This identifier can be used in order to cancel the request.
+ */
+- (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier useAuthentication:(BOOL)flag;
 
 /*!
  * Use this method to perform a request connection asynchronously and get back the response in the main thread.
@@ -209,9 +214,69 @@ typedef enum
              progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock
             completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion;
 
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Managing existing requests
+/// --------------------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * This method allow request cancelation.
+ * @param key The request key.
+ * @discussion If the request has been already executed or the key is unknown, this method does nothing.
+ * @return The method return a new copy of the connection operation that can be reused to perform the connection again if needed.
+ */
+- (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key;
+
+/*!
+ * Changes the priority of the request associated to the given key.
+ * @param priority The new priority.
+ * @param key The request identifier.
+ * @discussion If the request has been already executed or the key is unknown, this method does nothing.
+ */
+- (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key;
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Background Execution
+/// --------------------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * Set of queue identifiers that can be executed on when the app goes to background execution.
+ */
 @property (nonatomic, strong) NSSet *backgroundExecutionQueueIdentifiers;
 
+/*!
+ * Mark a queue to be able to continue performing connections while the app goes to background.
+ * @param queueIdentifier The queue identifier.
+ */
 - (void)addBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier;
+
+/*!
+ * Stop a queue to be able to perform connecitons while the app goes to background.
+ * @param queueIdentifier The queue identifier.
+ */
 - (void)removeBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier;
+
+/// --------------------------------------------------------------------------------------------------------------------------------
+/// @name Credentials and Tursted Servers
+/// --------------------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * Add trusted hosts for specific requests that uses credentials.
+ */
+@property (nonatomic, strong) NSArray *trustedHosts;
+
+/*!
+ * Retrive the user credentials for the given host.
+ * @param host The host.
+ * @return The user specified credential.
+ */
+- (NSURLCredential*)credentialForHost:(NSString*)host;
+
+/*!
+ * Set a credential for a specific host.
+ * @param credential The credential to add.
+ * @param host The host.
+ */
+- (void)setCredential:(NSURLCredential*)credential forHost:(NSString*)host;
 
 @end
