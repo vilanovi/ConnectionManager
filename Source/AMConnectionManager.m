@@ -299,6 +299,13 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     return copy;
 }
 
+- (void)cancelAllRequests
+{
+    [[_operations allValues] makeObjectsPerformSelector:@selector(cancel)];
+    [_operations removeAllObjects];
+    [self AM_refreshNetworkActivityIndicatorState];
+}
+
 - (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
 {
     NSOperation *operation = [_operations objectForKey:@(key)];

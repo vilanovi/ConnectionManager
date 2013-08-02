@@ -229,6 +229,11 @@ typedef enum
 - (AMAsyncConnectionOperation*)cancelRequestWithKey:(NSInteger)key;
 
 /*!
+ * Call this method to cancel all queued and executing requests.
+ */
+- (void)cancelAllRequests;
+
+/*!
  * Changes the priority of the request associated to the given key.
  * @param priority The new priority.
  * @param key The request identifier.
