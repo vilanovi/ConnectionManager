@@ -69,6 +69,8 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     self = [super init];
     if (self)
     {
+        _executeCompletionBlocksOnMainThread = NO;
+        
         _queues = [NSMutableDictionary dictionary];
         _pausedOperations = [NSMutableDictionary dictionary];
         
@@ -272,8 +274,20 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     NSInteger operationKey = [self AM_nextKey];
     
     void (^connectionCompletion)(NSURLResponse* response, NSData* data, NSError* error) = ^(NSURLResponse* response, NSData* data, NSError* error) {
-        if (completion)
+        
+        if (!completion)
+            return;
+        
+        if (_executeCompletionBlocksOnMainThread)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(response, data, error, operationKey);
+            });
+        }
+        else
+        {
             completion(response, data, error, operationKey);
+        }
     };
 
     AMAsyncConnectionOperation *operation = [[AMAsyncConnectionOperation alloc] initWithRequest:request completionBlock:connectionCompletion];

@@ -90,6 +90,11 @@ typedef enum
 @property (nonatomic, assign) BOOL showConnectionErrors;
 
 /*!
+ * Set to YES to execute completionBlocks on main thread, otherwise the completion block is executed in the same background thread as the connection. Defaule value is NO.
+ */
+@property (nonatomic, assign) BOOL executeCompletionBlocksOnMainThread;
+
+/*!
  * Configure the max number of concurrent connections for a specific queue.
  * @param maxConcurrentConnectionCount The maximum number of connections. Specify -1 (default) and the system will determine the value automatically.
  */

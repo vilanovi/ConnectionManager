@@ -88,7 +88,7 @@
         // Do the main work of the operation here.
         [self concurrentMain];
         
-        [self performSelectorOnMainThread:@selector(completeOperation) withObject:self waitUntilDone:NO];
+        [self completeOperation];
     }
     @catch(...)
     {
