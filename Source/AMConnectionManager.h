@@ -42,14 +42,14 @@ extern NSString * const AMConnectionManagerDefaultQueueIdentifier;
  * @constant AMConnectionPriorityVeryHigh The highest priority.
  * @discussion The AMConnectionPriority is equivalent to NSOperationQueuePriority.
  */
-typedef enum
+typedef NS_ENUM(NSInteger, AMConnectionPriority)
 {
     AMConnectionPriorityVeryLow = NSOperationQueuePriorityVeryLow,
     AMConnectionPriorityLow = NSOperationQueuePriorityLow,
     AMConnectionPriorityNormal = NSOperationQueuePriorityNormal,
     AMConnectionPriorityHigh = NSOperationQueuePriorityHigh,
     AMConnectionPriorityVeryHigh = NSOperationQueuePriorityHigh
-} AMConnectionPriority;
+};
 
 @class AMConcurrentOperation;
 @class AMAsyncConnectionOperation;

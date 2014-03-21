@@ -295,7 +295,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     operation.credential = [_credentials valueForKey:request.URL.host];
     
     operation.progressStatusBlock = progressStatusBlock;
-    operation.queuePriority = priority;
+    operation.queuePriority = (NSOperationQueuePriority)priority;
     
     NSNumber *numberKey = @(operationKey);
     operation.connectionManagerKey = numberKey;
@@ -339,7 +339,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 - (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
 {
     NSOperation *operation = [_operations objectForKey:@(key)];
-    [operation setQueuePriority:priority];
+    [operation setQueuePriority:(NSOperationQueuePriority)priority];
 }
 
 - (void)addBackgroundExecutionQueueIdentifier:(NSString*)queueIdentifier

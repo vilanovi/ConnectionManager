@@ -121,8 +121,8 @@
 {
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     
-    _maxConcurrentConnectionCountLabel.text = [NSString stringWithFormat:@"%d", connectionManager.maxConcurrentConnectionCount];
-    _activeOperationsLabel.text = [NSString stringWithFormat:@"%d", [[connectionManager operationQueueForIdentifier:nil] operationCount]];
+    _maxConcurrentConnectionCountLabel.text = [NSString stringWithFormat:@"%ld", (long)connectionManager.maxConcurrentConnectionCount];
+    _activeOperationsLabel.text = [NSString stringWithFormat:@"%ld", (long)[[connectionManager operationQueueForIdentifier:nil] operationCount]];
 }
 
 @end
