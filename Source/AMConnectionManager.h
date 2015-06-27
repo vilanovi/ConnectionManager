@@ -35,19 +35,23 @@ extern NSString * const AMConnectionManagerDefaultQueueIdentifier;
 /*!
  * @typedef AMConnectionPriority
  * @abstract These are the available priorities to assign to connection requests.
- * @constant AMConnectionPriorityVeryLow Lower priority.
- * @constant AMConnectionPriorityLow This priority is higher than AMConnectionPriorityVeryLow and lower than others.
- * @constant AMConnectionPriorityNormal This is the default priority for connections. Also it is placed in the middle of all priorities.
- * @constant AMConnectionPriorityHigh The second placed priority.
- * @constant AMConnectionPriorityVeryHigh The highest priority.
  * @discussion The AMConnectionPriority is equivalent to NSOperationQueuePriority.
  */
 typedef NS_ENUM(NSInteger, AMConnectionPriority)
 {
+    /** Lower priority. */
     AMConnectionPriorityVeryLow = NSOperationQueuePriorityVeryLow,
+    
+    /** This priority is higher than AMConnectionPriorityVeryLow and lower than others. */
     AMConnectionPriorityLow = NSOperationQueuePriorityLow,
+    
+    /** This is the default priority for connections. Also it is placed in the middle of all priorities. */
     AMConnectionPriorityNormal = NSOperationQueuePriorityNormal,
+    
+    /** The second top-most priority. */
     AMConnectionPriorityHigh = NSOperationQueuePriorityHigh,
+    
+    /** The highest priority. */
     AMConnectionPriorityVeryHigh = NSOperationQueuePriorityHigh
 };
 

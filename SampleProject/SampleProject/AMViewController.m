@@ -26,12 +26,11 @@
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self)
     {
-        _imagesToDownload = @[
-        @"http://ocj.com/wp-content/uploads/2011/04/planetearth1.jpg",
-        @"http://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg",
-        @"http://www.diamondlantern.com/wp-content/uploads/2011/05/SXC-953432_13476061-No-Restr-EARTH.jpg",
-        @"http://storiesofcreativeecology.files.wordpress.com/2012/05/mother-earth-myspace-photobucket.jpg"
-        ];
+        _imagesToDownload = @[@"http://i.huffpost.com/gen/1860407/images/o-BLACK-FOOTED-CAT-KITTENS-facebook.jpg",
+                              @"http://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg",
+                              @"http://www.diamondlantern.com/wp-content/uploads/2011/05/SXC-953432_13476061-No-Restr-EARTH.jpg",
+                              @"http://storiesofcreativeecology.files.wordpress.com/2012/05/mother-earth-myspace-photobucket.jpg"
+                              ];
         
         _oldConnectionKey = NSNotFound;
     }
@@ -50,7 +49,7 @@
     _stepper.minimumValue = 1;
     _stepper.maximumValue = 1000000;
     
-    [self _refreshViewsData];
+    [self am_refreshViewsData];
 }
 
 - (void)didReceiveMemoryWarning
@@ -62,7 +61,7 @@
 
 - (IBAction)asynchornousAction:(id)sender
 {
-    NSURLRequest *urlRequest = [self _randomRequest];
+    NSURLRequest *urlRequest = [self am_randomRequest];
     
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     
@@ -71,17 +70,21 @@
                                            progressStatus:^(NSDictionary *progressStatus) {
                                                
                                                CGFloat downloadProgress = [[progressStatus valueForKey:AMAsynchronousConnectionStatusDownloadProgressKey] floatValue];
-                                               _progressBar.progress = downloadProgress;
+                                               dispatch_async(dispatch_get_main_queue(), ^{
+                                                   _progressBar.progress = downloadProgress;
+                                               });
                                                
                                            } completionBlock:^(NSURLResponse *response, NSData *data, NSError *error, NSInteger key) {
                                                
-                                               if (!error)
-                                                   [self _setImageFromData:data];
-                                               
-                                               [self _refreshViewsData];                                               
+                                               dispatch_async(dispatch_get_main_queue(), ^{
+                                                   if (!error)
+                                                       [self am_setImageFromData:data];
+                                                   
+                                                   [self am_refreshViewsData];
+                                               });
                                            }];
 
-    [self _refreshViewsData];
+    [self am_refreshViewsData];
 }
 
 - (IBAction)cancelLastConnection:(id)sender
@@ -89,7 +92,7 @@
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     [connectionManager cancelRequestWithKey:_oldConnectionKey];
     
-    [self performSelector:@selector(_refreshViewsData) withObject:nil afterDelay:0.1];
+    [self performSelector:@selector(am_refreshViewsData) withObject:nil afterDelay:0.1];
 }
 
 - (IBAction)stepperValueDidChange:(id)sender
@@ -99,25 +102,25 @@
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     connectionManager.maxConcurrentConnectionCount = value;
     
-    [self _refreshViewsData];
+    [self am_refreshViewsData];
 }
 
 #pragma mark Private Method
 
-- (NSURLRequest*)_randomRequest
+- (NSURLRequest*)am_randomRequest
 {
-    NSString *urlPath = [_imagesToDownload objectAtIndex:abs(arc4random())%_imagesToDownload.count];
+    NSString *urlPath = [_imagesToDownload objectAtIndex:arc4random()%_imagesToDownload.count];
     NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:urlPath] cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:30];
     return urlRequest;
 }
 
-- (void)_setImageFromData:(NSData*)data
+- (void)am_setImageFromData:(NSData*)data
 {
     UIImage *image = [[UIImage alloc] initWithData:data];
     _imageView.image = image;
 }
 
-- (void)_refreshViewsData
+- (void)am_refreshViewsData
 {
     AMConnectionManager *connectionManager = [AMConnectionManager defaultManager];
     

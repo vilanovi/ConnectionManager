@@ -87,8 +87,8 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
         _credentials = [NSMutableDictionary dictionary];
         
         NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-        [nc addObserver:self selector:@selector(AM_notificationReceived:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-        [nc addObserver:self selector:@selector(AM_notificationReceived:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        [nc addObserver:self selector:@selector(am_notificationReceived:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+        [nc addObserver:self selector:@selector(am_notificationReceived:) name:UIApplicationDidBecomeActiveNotification object:nil];
     }
     return self;
 }
@@ -97,12 +97,12 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (NSInteger)maxConcurrentConnectionCount
 {
-    return [[self AM_queueWithIdentifier:AMConnectionManagerDefaultQueueIdentifier] maxConcurrentOperationCount];
+    return [[self am_queueWithIdentifier:AMConnectionManagerDefaultQueueIdentifier] maxConcurrentOperationCount];
 }
 
 - (void)setMaxConcurrentConnectionCount:(NSInteger)maxConcurrentConnectionCount
 {
-    [[self AM_queueWithIdentifier:AMConnectionManagerDefaultQueueIdentifier] setMaxConcurrentOperationCount:maxConcurrentConnectionCount];
+    [[self am_queueWithIdentifier:AMConnectionManagerDefaultQueueIdentifier] setMaxConcurrentOperationCount:maxConcurrentConnectionCount];
 }
 
 - (void)setBackgroundExecutionQueueIdentifiers:(NSSet *)backgroundExecutionQueueIdentifiers
@@ -114,7 +114,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (void)setMaxConcurrentConnectionCount:(NSInteger)maxConcurrentConnectionCount inQueue:(NSString*)queueIdentifier
 {
-    [[self AM_queueWithIdentifier:queueIdentifier] setMaxConcurrentOperationCount:maxConcurrentConnectionCount];
+    [[self am_queueWithIdentifier:queueIdentifier] setMaxConcurrentOperationCount:maxConcurrentConnectionCount];
 }
 
 - (void)freezeQueueWithIdentifier:(NSString*)identifier
@@ -152,7 +152,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
         [_operations setObject:newOperation forKey:newOperation.connectionManagerKey];
 
         [queue addOperation:newOperation];
-        [self AM_refreshNetworkActivityIndicatorState];
+        [self am_refreshNetworkActivityIndicatorState];
     }
     
     [pausedOperations removeAllObjects];
@@ -179,7 +179,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (NSOperationQueue*)operationQueueForIdentifier:(NSString*)identifier
 {
-    return [self AM_queueWithIdentifier:identifier];
+    return [self am_queueWithIdentifier:identifier];
 }
 
 - (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier
@@ -189,9 +189,9 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 - (NSInteger)performConnectionOperation:(AMAsyncConnectionOperation*)operation inQueue:(NSString*)queueIdentifier useAuthentication:(BOOL)flag
 {
-    NSOperationQueue *queue = [self AM_queueWithIdentifier:queueIdentifier];
+    NSOperationQueue *queue = [self am_queueWithIdentifier:queueIdentifier];
     
-    NSInteger operationKey = [self AM_nextKey];
+    NSInteger operationKey = [self am_nextKey];
     
     NSNumber *numberKey = @(operationKey);
     operation.connectionManagerKey = numberKey;
@@ -207,11 +207,11 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     __weak AMConnectionManager *connectionManager = self;
     [operation setCompletionBlock:^{
         [_operations removeObjectForKey:numberKey];
-        [connectionManager AM_refreshNetworkActivityIndicatorState];
+        [connectionManager am_refreshNetworkActivityIndicatorState];
     }];
     
     [queue addOperation:operation];
-    [self AM_refreshNetworkActivityIndicatorState];
+    [self am_refreshNetworkActivityIndicatorState];
     
     return operationKey;
 }
@@ -271,7 +271,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
              progressStatus:(void (^)(NSDictionary *progressStatus))progressStatusBlock
             completionBlock:(void (^)(NSURLResponse* response, NSData* data, NSError* error, NSInteger key))completion
 {
-    NSInteger operationKey = [self AM_nextKey];
+    NSInteger operationKey = [self am_nextKey];
     
     void (^connectionCompletion)(NSURLResponse* response, NSData* data, NSError* error) = ^(NSURLResponse* response, NSData* data, NSError* error) {
         
@@ -304,13 +304,13 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     __weak AMConnectionManager *connectionManager = self;
     [operation setCompletionBlock:^{
         [_operations removeObjectForKey:numberKey];
-        [connectionManager AM_refreshNetworkActivityIndicatorState];
+        [connectionManager am_refreshNetworkActivityIndicatorState];
     }];
     
-    NSOperationQueue *queue = [self AM_queueWithIdentifier:queueIdentifier];
+    NSOperationQueue *queue = [self am_queueWithIdentifier:queueIdentifier];
     
     [queue addOperation:operation];
-    [self AM_refreshNetworkActivityIndicatorState];
+    [self am_refreshNetworkActivityIndicatorState];
     
     return operationKey;
 }
@@ -324,7 +324,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     [operation cancel];
     
     [_operations removeObjectForKey:@(key)];
-    [self AM_refreshNetworkActivityIndicatorState];
+    [self am_refreshNetworkActivityIndicatorState];
     
     return copy;
 }
@@ -333,7 +333,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 {
     [[_operations allValues] makeObjectsPerformSelector:@selector(cancel)];
     [_operations removeAllObjects];
-    [self AM_refreshNetworkActivityIndicatorState];
+    [self am_refreshNetworkActivityIndicatorState];
 }
 
 - (void)changeToPriority:(AMConnectionPriority)priority requestWithKey:(NSInteger)key
@@ -366,7 +366,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 #pragma mark Private Methods
 
-- (NSOperationQueue*)AM_queueWithIdentifier:(NSString*)identifier
+- (NSOperationQueue*)am_queueWithIdentifier:(NSString*)identifier
 {
     if (identifier == nil)
         identifier = AMConnectionManagerDefaultQueueIdentifier;
@@ -387,7 +387,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     return queue;
 }
 
-- (void)AM_refreshNetworkActivityIndicatorState
+- (void)am_refreshNetworkActivityIndicatorState
 {
     if (!_showsNetworkActivityIndicator)
         return;
@@ -400,7 +400,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     });
 }
 
-- (NSInteger)AM_nextKey
+- (NSInteger)am_nextKey
 {
     NSInteger operationKey;
     
@@ -413,7 +413,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     return operationKey;
 }
 
-- (void)AM_presentAlertViewForError:(NSError*)error;
+- (void)am_presentAlertViewForError:(NSError*)error;
 {
     if (!_showConnectionErrors)
         return;
@@ -436,7 +436,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     });
 }
 
-- (void)AM_notificationReceived:(NSNotification*)notification
+- (void)am_notificationReceived:(NSNotification*)notification
 {
     if ([notification.name isEqualToString:UIApplicationDidBecomeActiveNotification])
     {
@@ -477,7 +477,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
     }
 }
 
-- (void)AM_stopBackgroundTask
+- (void)am_stopBackgroundTask
 {
     if (_queuesNotEmpty > 0)
         return;
@@ -518,7 +518,7 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
                         if (_queuesNotEmpty == 0)
                         {
                             // By executing this method at the end of the run loop we give a chance to the app to add new requests and cancel the background execution cancelation.
-                            [self performSelector:@selector(AM_stopBackgroundTask) withObject:nil afterDelay:0.0];
+                            [self performSelector:@selector(am_stopBackgroundTask) withObject:nil afterDelay:0.0];
                         }
                     }
                 }
@@ -552,15 +552,15 @@ NSString * const AMConnectionManagerDefaultQueueIdentifier = @"AMConnectionManag
 
 @implementation AMConnectionManager (Private)
 
-- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op connectionDidFailWithError:(NSError*)error
+- (void)am_connectionOperation:(AMAsyncConnectionOperation*)op connectionDidFailWithError:(NSError*)error
 {
-    [self AM_presentAlertViewForError:error];
+    [self am_presentAlertViewForError:error];
 
     if ([_delegate respondsToSelector:@selector(connectionManager:connectionDidFailForConnectionOperation:error:)])
         [_delegate connectionManager:self connectionDidFailForConnectionOperation:op error:error];
 }
 
-- (void)AM_connectionOperation:(AMAsyncConnectionOperation*)op authenticationDidFailWithAuthenticationChallenge:(NSURLAuthenticationChallenge*)challange
+- (void)am_connectionOperation:(AMAsyncConnectionOperation*)op authenticationDidFailWithAuthenticationChallenge:(NSURLAuthenticationChallenge*)challange
 {
     if ([_delegate respondsToSelector:@selector(connectionManager:authenticationDidFailForConnectionOperation:authenticationChallange:)])
         [_delegate connectionManager:self authenticationDidFailForConnectionOperation:op authenticationChallange:challange];

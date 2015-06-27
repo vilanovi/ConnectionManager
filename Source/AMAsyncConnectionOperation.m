@@ -140,7 +140,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     _error = error;
     [self _stopConnection];
     
-    [[AMConnectionManager defaultManager] AM_connectionOperation:self connectionDidFailWithError:error];
+    [[AMConnectionManager defaultManager] am_connectionOperation:self connectionDidFailWithError:error];
 }
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
@@ -191,7 +191,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
             if (_authenticationDidFail)
                 _authenticationDidFail(self, challenge);
             
-            [[AMConnectionManager defaultManager] AM_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
+            [[AMConnectionManager defaultManager] am_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
             
             [[challenge sender] cancelAuthenticationChallenge:challenge];
         }
@@ -205,7 +205,7 @@ NSString * const AMAsynchronousConnectionStatusReceivedURLHeadersKey = @"AMAsync
     if (_authenticationDidFail)
         _authenticationDidFail(self, challenge);
     
-    [[AMConnectionManager defaultManager] AM_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
+    [[AMConnectionManager defaultManager] am_connectionOperation:self authenticationDidFailWithAuthenticationChallenge:challenge];
 }
 
 #pragma mark NSURLConnectionDataDelegate
